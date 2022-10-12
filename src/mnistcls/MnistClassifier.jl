@@ -1,4 +1,5 @@
 module MnistClassifier
+export Trainer
 
 using BSON: @save
 using BSON, Flux
