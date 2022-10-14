@@ -33,3 +33,7 @@ result:
 [ Info:   -- accuracy=0.9842
 [ Info:   -- new best record
 ```
+
+## Pluto Notebook
+
+Please refer to the [page](https://ppmzhang2.github.io/JuliaAlgos.jl/).

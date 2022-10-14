@@ -1,6 +1,9 @@
 ### A Pluto.jl notebook ###
 # v0.19.13
 
+#> [frontmatter]
+#> title = "Orbit of the Moon"
+
 using Markdown
 using InteractiveUtils
 
@@ -35,13 +38,19 @@ where:
 - mass of earth $M = 5.97 \times 10^{24}$
 """
 
+# ╔═╡ 8a5b7003-11fa-4f84-a161-d71fbc117f42
+md"""
+## Numeric Solver
+"""
+
 # ╔═╡ 7976e774-2ce4-4c2b-9e62-a7087193ec65
 begin
 	G = 6.67e-11  # gravititional constant
 	M = 5.972e24  # mass of earth
 	u₀ = [3.632289e8, 0.0]  # perigee orbit distance
 	du₀ = [0.0, 1.07e3]  # appro. perigee velocity
-	tspan = [0.0, 27.32 * 24 * 60 * 60]  # moon revolution period
+	tspan = [0.0, 27.32 * 24 * 60 * 60]
+	T = 27.32 * 24 * 60 * 60  # moon revolution period
 	K = G * M
 end
 
@@ -52,13 +61,48 @@ function ode!(ddu, du,u,p,t)
 end
 
 # ╔═╡ 7570244f-8325-4666-8d3a-173aa91677f4
-prob = SecondOrderODEProblem(ode!, du₀, u₀, tspan)
+prob = SecondOrderODEProblem(ode!, du₀, u₀, [0.0, T])
 
 # ╔═╡ 76df2393-8352-4993-80cd-911598eb131c
-sol = solve(prob)
+begin
+	sol = solve(prob)
+	plot(sol, idxs=(3, 4))
+end
 
-# ╔═╡ 9996fee7-b873-47ad-a2ae-d8a6168c1c2b
-plot(sol, idxs=(3, 4))
+# ╔═╡ ce9b207d-6b2d-48ff-b422-1db78ac04af6
+md"""
+## Animation
+"""
+
+# ╔═╡ 7c964c48-ac7e-4778-9418-3b1c6cf72dd4
+begin
+	@userplot CirclePlot
+	@recipe function f(cp::CirclePlot)
+	    x, y, i = cp.args
+	    n = length(x)
+	    inds = circshift(1:n, 1 - i)
+	    linewidth --> range(0, 10, length = n)
+	    seriesalpha --> range(0, 1, length = n)
+	    aspect_ratio --> 1
+	    label --> false
+	    x[inds], y[inds]
+	end
+	N = 200
+end
+
+# ╔═╡ 81fc49d7-c55d-4007-93aa-123d99d317b1
+x, y = let t = range(0, T, length=N)
+	mat = sol(t)
+	mat[3, :], mat[4, :]
+end
+
+# ╔═╡ 693975b9-18e8-46aa-a0fe-880993bb11b5
+anim = @animate for i ∈ 1:N
+    circleplot(x, y, i)
+end
+
+# ╔═╡ e8d513a5-2184-4441-afd2-405478791108
+gif(anim, fps = 30)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1664,11 +1708,16 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╟─4db8f8c0-6df9-40a6-b2dc-f4089f87c5cc
+# ╟─8a5b7003-11fa-4f84-a161-d71fbc117f42
 # ╠═68399d6a-4b62-11ed-31fe-ad20beee89b8
 # ╠═7976e774-2ce4-4c2b-9e62-a7087193ec65
 # ╠═f62fb92c-5b9c-43fc-a4e1-dbfecd619a99
 # ╠═7570244f-8325-4666-8d3a-173aa91677f4
 # ╠═76df2393-8352-4993-80cd-911598eb131c
-# ╠═9996fee7-b873-47ad-a2ae-d8a6168c1c2b
+# ╟─ce9b207d-6b2d-48ff-b422-1db78ac04af6
+# ╠═7c964c48-ac7e-4778-9418-3b1c6cf72dd4
+# ╠═81fc49d7-c55d-4007-93aa-123d99d317b1
+# ╠═693975b9-18e8-46aa-a0fe-880993bb11b5
+# ╠═e8d513a5-2184-4441-afd2-405478791108
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

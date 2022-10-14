@@ -1,6 +1,9 @@
 ### A Pluto.jl notebook ###
 # v0.19.13
 
+#> [frontmatter]
+#> title = "Simple Harmonic Motion"
+
 using Markdown
 using InteractiveUtils
 
