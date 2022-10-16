@@ -16,6 +16,10 @@ md"""
 - ODE
   - [Simple Harmonic Motion](./ode_harmonic.html)
   - [Orbit of the Moon](./ode_orbit.html)
+  - [Solving Single Pendulum with Lagrangian Mechanics](./ode_pendulum.html)
+  - [Brachistochrone Problem](./ode_brachistochrone.html)
+- CV
+  - [IOU vs. GIOU](./cv_iou.html)
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

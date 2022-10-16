@@ -2,114 +2,107 @@
 # v0.19.13
 
 #> [frontmatter]
-#> title = "Orbit of the Moon"
+#> title = "Brachistochrone Problem"
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 68399d6a-4b62-11ed-31fe-ad20beee89b8
+# ╔═╡ a4f948d0-4d40-11ed-370a-79f7d9256ef5
 using DifferentialEquations, Plots
 
-# ╔═╡ 4db8f8c0-6df9-40a6-b2dc-f4089f87c5cc
+# ╔═╡ bb62e8e7-4ed0-4f3f-91f7-1f665ca92b45
 md"""
-# Orbit of the Moon
+# Brachistochrone Problem
 
-Suppose the Earth is at the origin,
-the displacement equation of the moon is $r(t)$.
-
-- Initial Conditions: perigee
-  - displacement: $[3.63 \times 10^8, 0]$
-  - velocity: $[0, 10^3]$
+The time of descent $T$:
 
 ```math
-\begin{cases}
-	\frac{d^2}{dt^2} u_1 =
-		- \frac{G M cos(\alpha)}{u_1^2 + u_2^2}
-	\\
-	\frac{d^2}{dt^2} u_2 =
-		- \frac{G M sin(\alpha)}{u_1^2 + u_2^2}
-\end{cases}
+T = \int dt = \int \frac{1}{v} ds =
+	\int \frac{1}{v} \sqrt{1 + y'(x)} dx
 ```
 
-where:
+From conservation of energy we have:
 
-- angle $\alpha = arctan(\frac{u_1}{u_2})$
-- gravititional constant $G = 6.67 \times 10^{-11}$
-- mass of earth $M = 5.97 \times 10^{24}$
-"""
+```math
+\frac{1}{2} m v^2 = m g y
+```
 
-# ╔═╡ 8a5b7003-11fa-4f84-a161-d71fbc117f42
-md"""
-## Numeric Solver
-"""
+```math
+v = \sqrt{2gy}
+```
 
-# ╔═╡ 7976e774-2ce4-4c2b-9e62-a7087193ec65
-begin
-	G = 6.67e-11  # gravititional constant
-	M = 5.972e24  # mass of earth
-	u₀ = [3.632289e8, 0.0]  # perigee orbit distance
-	du₀ = [0.0, 1.07e3]  # appro. perigee velocity
-	tspan = [0.0, 27.32 * 24 * 60 * 60]
-	T = 27.32 * 24 * 60 * 60  # moon revolution period
-	K = G * M
-end
+```math
+\therefore
+T = \int_{x_1}^{x_2} \frac{\sqrt{1 + y'(x)}}{\sqrt{2gy}} dx
+```
 
-# ╔═╡ f62fb92c-5b9c-43fc-a4e1-dbfecd619a99
-function ode!(ddu, du,u,p,t)
-	ddu[1] = -cos(atan(u[2], u[1])) * K / (u[1]^2 + u[2]^2)
-	ddu[2] = -sin(atan(u[2], u[1])) * K / (u[1]^2 + u[2]^2)
-end
+```math
+T = \frac{1}{\sqrt{2g}} \int_{x_1}^{x_2} \sqrt{\frac{1 + y'(x)}{y(x)}} dx
+```
 
-# ╔═╡ 7570244f-8325-4666-8d3a-173aa91677f4
-prob = SecondOrderODEProblem(ode!, du₀, u₀, [0.0, T])
+by the Euler-Lagrange equations:
 
-# ╔═╡ 76df2393-8352-4993-80cd-911598eb131c
-begin
-	sol = solve(prob)
-	plot(sol, idxs=(3, 4))
-end
+```math
+\frac{\partial T}{\partial y} =
+	- \frac{1}{2 y} \sqrt{\frac{1 + \dot{y}^2}{y}}
+```
 
-# ╔═╡ ce9b207d-6b2d-48ff-b422-1db78ac04af6
-md"""
-## Animation
-"""
+```math
+\frac{\partial T}{\partial \dot{y}} =
+	\frac{\dot{y}}{\sqrt{y (1 + \dot{y}^2)}}
+```
 
-# ╔═╡ 7c964c48-ac7e-4778-9418-3b1c6cf72dd4
-begin
-	@userplot CirclePlot
-	@recipe function f(cp::CirclePlot)
-	    x, y, i = cp.args
-	    n = length(x)
-	    inds = circshift(1:n, 1 - i)
-	    linewidth --> range(0, 10, length = n)
-	    seriesalpha --> range(0, 1, length = n)
-	    aspect_ratio --> 1
-	    label --> false
-	    x[inds], y[inds]
-	end
-	N = 200
-end
+```math
+\frac{d}{dx} (\frac{\partial T}{\partial \dot{y}}) =
+	\frac{1}{\sqrt{y (1 + \dot{y}^2)}}
+    (\frac{\ddot{y}}{1 + \dot{y}^2} - \frac{\dot{y}^2}{2 y})
+```
 
-# ╔═╡ 81fc49d7-c55d-4007-93aa-123d99d317b1
-x, y = let t = range(0, T, length=N)
-	mat = sol(t)
-	mat[3, :], mat[4, :]
-end
+Simplifying
+$\frac{\partial T}{\partial y} =
+\frac{d}{dx} (\frac{\partial T}{\partial \dot{y}})$:
 
-# ╔═╡ 693975b9-18e8-46aa-a0fe-880993bb11b5
-anim = @animate for i ∈ 1:N
-    circleplot(x, y, i)
-end
+```math
+\ddot{y} = - \frac{1 + \dot{y}^2}{2y}
+```
 
-# ╔═╡ e8d513a5-2184-4441-afd2-405478791108
-gif(anim, fps = 30)
-
-# ╔═╡ b5269f29-6358-4830-9ebe-6275c549053b
-md"""
 ## Reference
 
-- [The Precession of Mercury’s Perihelion](https://sites.math.washington.edu/~morrow/papers/Genrel.pdf)
+- [Brachistochrone Problem](https://web.math.utk.edu/~freire/teaching/m231f08/m231f08brachistochrone.pdf)
 """
+
+# ╔═╡ ab429cc4-7a57-4c30-a553-4088fab04f07
+function ode(du, u, p, t)
+    -(1 + (du)^2) / (2*u)
+end
+
+# ╔═╡ b0a6c172-f66f-48b9-b4c9-678ce8663e2d
+prob = SecondOrderODEProblem(ode, 0.0, 10.0, [0.0, 15.0])
+
+# ╔═╡ 856adc0e-d75c-4015-98ba-c357b60ef011
+sol = solve(prob)
+
+# ╔═╡ 9314b12f-e815-4ae4-a5a3-71d6bba88ceb
+begin
+	t = -10:0.01:10.0
+	x, y = let mat = sol(t)
+		mat[1, :], mat[2, :]
+	end
+end
+
+# ╔═╡ 43dc3919-b023-4342-8f84-7d41df8653ee
+x1, y1 = let c = 10.0
+	t = range(0, 4, length=1000)
+	fx  = ϕ -> 0.5 * c*(2ϕ - sin(2ϕ))
+	fy = ϕ -> 0.5 * c*(1 - cos(2ϕ))
+	fx.(t), fy.(t)
+end
+
+# ╔═╡ ce54d82c-cb83-4c20-a564-4a5c284ae86f
+begin
+	plot(t, -y)
+	plot!(x1 .- 15.7, -y1)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1714,18 +1707,13 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─4db8f8c0-6df9-40a6-b2dc-f4089f87c5cc
-# ╟─8a5b7003-11fa-4f84-a161-d71fbc117f42
-# ╠═68399d6a-4b62-11ed-31fe-ad20beee89b8
-# ╠═7976e774-2ce4-4c2b-9e62-a7087193ec65
-# ╠═f62fb92c-5b9c-43fc-a4e1-dbfecd619a99
-# ╠═7570244f-8325-4666-8d3a-173aa91677f4
-# ╠═76df2393-8352-4993-80cd-911598eb131c
-# ╟─ce9b207d-6b2d-48ff-b422-1db78ac04af6
-# ╠═7c964c48-ac7e-4778-9418-3b1c6cf72dd4
-# ╠═81fc49d7-c55d-4007-93aa-123d99d317b1
-# ╠═693975b9-18e8-46aa-a0fe-880993bb11b5
-# ╠═e8d513a5-2184-4441-afd2-405478791108
-# ╟─b5269f29-6358-4830-9ebe-6275c549053b
+# ╟─bb62e8e7-4ed0-4f3f-91f7-1f665ca92b45
+# ╠═a4f948d0-4d40-11ed-370a-79f7d9256ef5
+# ╠═ab429cc4-7a57-4c30-a553-4088fab04f07
+# ╠═b0a6c172-f66f-48b9-b4c9-678ce8663e2d
+# ╠═856adc0e-d75c-4015-98ba-c357b60ef011
+# ╠═9314b12f-e815-4ae4-a5a3-71d6bba88ceb
+# ╠═43dc3919-b023-4342-8f84-7d41df8653ee
+# ╠═ce54d82c-cb83-4c20-a564-4a5c284ae86f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
