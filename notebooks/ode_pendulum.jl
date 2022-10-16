@@ -2,114 +2,119 @@
 # v0.19.13
 
 #> [frontmatter]
-#> title = "Orbit of the Moon"
+#> title = "Solving Single Pendulum with Lagrangian Mechanics"
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 68399d6a-4b62-11ed-31fe-ad20beee89b8
+# ╔═╡ 662ac32a-de46-450c-9939-606f03cedf2b
 using DifferentialEquations, Plots
 
-# ╔═╡ 4db8f8c0-6df9-40a6-b2dc-f4089f87c5cc
+# ╔═╡ 38d3a330-faa5-425f-8c1e-468728f72f04
 md"""
-# Orbit of the Moon
+# Solving Single Pendulum with Lagrangian Mechanics
 
-Suppose the Earth is at the origin,
-the displacement equation of the moon is $r(t)$.
-
-- Initial Conditions: perigee
-  - displacement: $[3.63 \times 10^8, 0]$
-  - velocity: $[0, 10^3]$
+The Lagrangian
 
 ```math
-\begin{cases}
-	\frac{d^2}{dt^2} u_1 =
-		- \frac{G M cos(\alpha)}{u_1^2 + u_2^2}
-	\\
-	\frac{d^2}{dt^2} u_2 =
-		- \frac{G M sin(\alpha)}{u_1^2 + u_2^2}
-\end{cases}
+\mathcal{L} = T - U \\
+= \frac{1}{2} m \dot{x}^2 + V(x)
 ```
 
-where:
+can be expressed in terms of angle $\theta$ and radius $l$:
 
-- angle $\alpha = arctan(\frac{u_1}{u_2})$
-- gravititional constant $G = 6.67 \times 10^{-11}$
-- mass of earth $M = 5.97 \times 10^{24}$
+```math
+\mathcal{L}(t, \theta, \dot{\theta}) =
+	\frac{1}{2} m \cdot (l \cdot \dot{\theta})^2 +
+	m g \cdot l \cdot (1 - cos(\theta))
+```
+
+By Euler-Lagrange equations
+$\frac{d}{d t} (\frac{\partial \mathcal{L}}{\partial \dot{\theta}}) =
+\frac{\partial \mathcal{L}}{\partial \theta}$:
+
+```math
+\frac{\partial \mathcal{L}}{\partial \theta} =
+	- m \cdot g \cdot l \cdot sin(\theta)
+```
+
+```math
+\frac{\partial \mathcal{L}}{\partial \dot{\theta}} =
+	m \cdot l^2 \cdot \dot{\theta}
+```
+
+```math
+\frac{d}{d t} (\frac{\partial \mathcal{L}}{\partial \dot{\theta}}) =
+	m \cdot l^2 \cdot \ddot{\theta}
+```
+
+```math
+m \cdot l^2 \cdot \ddot{\theta} + m \cdot g \cdot l \cdot sin(\theta) = 0
+```
+
+Simplifying:
+
+```math
+\ddot{\theta} = - \frac{g}{l} \cdot sin(\theta)
+```
 """
 
-# ╔═╡ 8a5b7003-11fa-4f84-a161-d71fbc117f42
-md"""
-## Numeric Solver
-"""
-
-# ╔═╡ 7976e774-2ce4-4c2b-9e62-a7087193ec65
+# ╔═╡ 133e0eed-e166-4a80-b6e4-cd0349f93432
 begin
-	G = 6.67e-11  # gravititional constant
-	M = 5.972e24  # mass of earth
-	u₀ = [3.632289e8, 0.0]  # perigee orbit distance
-	du₀ = [0.0, 1.07e3]  # appro. perigee velocity
-	tspan = [0.0, 27.32 * 24 * 60 * 60]
-	T = 27.32 * 24 * 60 * 60  # moon revolution period
-	K = G * M
+	l = 1.0
+	g = 9.8
+	θ₀ = pi / 3
+	dθ₀ = 0.0
+	t₁ = 0.0
+	t₂ = 10.0
 end
 
-# ╔═╡ f62fb92c-5b9c-43fc-a4e1-dbfecd619a99
-function ode!(ddu, du,u,p,t)
-	ddu[1] = -cos(atan(u[2], u[1])) * K / (u[1]^2 + u[2]^2)
-	ddu[2] = -sin(atan(u[2], u[1])) * K / (u[1]^2 + u[2]^2)
+# ╔═╡ ee158098-c233-4423-bef6-113b5e326621
+function ode(dθ, θ, p, t)
+	- g / l * sin(θ)
 end
 
-# ╔═╡ 7570244f-8325-4666-8d3a-173aa91677f4
-prob = SecondOrderODEProblem(ode!, du₀, u₀, [0.0, T])
+# ╔═╡ bcb160a3-f736-4976-9354-4601b5ab928f
+prob = SecondOrderODEProblem(ode, dθ₀, θ₀, [t₁, t₂])
 
-# ╔═╡ 76df2393-8352-4993-80cd-911598eb131c
+# ╔═╡ a1bb740b-3cff-48ff-a71e-34b0b07a528b
 begin
 	sol = solve(prob)
-	plot(sol, idxs=(3, 4))
+	N = 100
+	x, y = let t = range(0, 2, length=N)
+		θ = sol(t)[2, :]
+		sin.(θ), -cos.(θ)
+	end
 end
 
-# ╔═╡ ce9b207d-6b2d-48ff-b422-1db78ac04af6
-md"""
-## Animation
-"""
+# ╔═╡ 789c637c-1a04-4c13-bebe-034d4ed50bd6
+begin
+	plot(x, y)
+	plot!(x -> 0)
+end
 
-# ╔═╡ 7c964c48-ac7e-4778-9418-3b1c6cf72dd4
+# ╔═╡ 96040a7d-efdb-48cf-890a-c77dcce3f87e
 begin
 	@userplot CirclePlot
 	@recipe function f(cp::CirclePlot)
-	    x, y, i = cp.args
-	    n = length(x)
-	    inds = circshift(1:n, 1 - i)
-	    linewidth --> range(0, 10, length = n)
-	    seriesalpha --> range(0, 1, length = n)
-	    aspect_ratio --> 1
-	    label --> false
-	    x[inds], y[inds]
+		x, y, i = cp.args
+		n = length(x)
+		inds = circshift(1:n, 1 - i)
+		linewidth --> range(0, 10, length = n)
+		seriesalpha --> range(0, 1, length = n)
+		aspect_ratio --> 1
+		label --> false
+		x[inds], y[inds]
 	end
-	N = 200
 end
 
-# ╔═╡ 81fc49d7-c55d-4007-93aa-123d99d317b1
-x, y = let t = range(0, T, length=N)
-	mat = sol(t)
-	mat[3, :], mat[4, :]
+# ╔═╡ 9c486b1e-1d7d-4bf8-a156-f19d07ff3b1d
+begin
+	anim = @animate for i ∈ 1:N
+	    circleplot(x, y, i)
+	end
+	gif(anim, fps = 30)
 end
-
-# ╔═╡ 693975b9-18e8-46aa-a0fe-880993bb11b5
-anim = @animate for i ∈ 1:N
-    circleplot(x, y, i)
-end
-
-# ╔═╡ e8d513a5-2184-4441-afd2-405478791108
-gif(anim, fps = 30)
-
-# ╔═╡ b5269f29-6358-4830-9ebe-6275c549053b
-md"""
-## Reference
-
-- [The Precession of Mercury’s Perihelion](https://sites.math.washington.edu/~morrow/papers/Genrel.pdf)
-"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -489,9 +494,9 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "802bfc139833d2ba893dd9e62ba1767c88d708ae"
+git-tree-sha1 = "87519eb762f85534445f5cda35be12e32759ee14"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.5"
+version = "0.13.4"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterfaceCore", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
@@ -1714,18 +1719,14 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─4db8f8c0-6df9-40a6-b2dc-f4089f87c5cc
-# ╟─8a5b7003-11fa-4f84-a161-d71fbc117f42
-# ╠═68399d6a-4b62-11ed-31fe-ad20beee89b8
-# ╠═7976e774-2ce4-4c2b-9e62-a7087193ec65
-# ╠═f62fb92c-5b9c-43fc-a4e1-dbfecd619a99
-# ╠═7570244f-8325-4666-8d3a-173aa91677f4
-# ╠═76df2393-8352-4993-80cd-911598eb131c
-# ╟─ce9b207d-6b2d-48ff-b422-1db78ac04af6
-# ╠═7c964c48-ac7e-4778-9418-3b1c6cf72dd4
-# ╠═81fc49d7-c55d-4007-93aa-123d99d317b1
-# ╠═693975b9-18e8-46aa-a0fe-880993bb11b5
-# ╠═e8d513a5-2184-4441-afd2-405478791108
-# ╟─b5269f29-6358-4830-9ebe-6275c549053b
+# ╟─38d3a330-faa5-425f-8c1e-468728f72f04
+# ╠═662ac32a-de46-450c-9939-606f03cedf2b
+# ╠═133e0eed-e166-4a80-b6e4-cd0349f93432
+# ╠═ee158098-c233-4423-bef6-113b5e326621
+# ╠═bcb160a3-f736-4976-9354-4601b5ab928f
+# ╠═a1bb740b-3cff-48ff-a71e-34b0b07a528b
+# ╠═789c637c-1a04-4c13-bebe-034d4ed50bd6
+# ╠═96040a7d-efdb-48cf-890a-c77dcce3f87e
+# ╠═9c486b1e-1d7d-4bf8-a156-f19d07ff3b1d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
