@@ -8,6 +8,7 @@ using BSON, Flux
 include("dataset.jl")
 include("measures.jl")
 include("model.jl")
+include("utils.jl")
 
 const DATA_PATH = normpath(joinpath(@__DIR__, "..", "..", "data"))
 
@@ -23,9 +24,9 @@ Base.@kwdef struct Trainer
     poolsize::Int64 = 2
     filtersize::Int64 = 3
     outchannel::Int64 = 32
-    η::Float64 = 1e-3
-    nepoch::Int64 = 5
-    batchsize::Int64 = 2^5
+    η::Float64 = 5e-4
+    nepoch::Int64 = 10
+    batchsize::Int64 = 2^6
     modelpath::String = joinpath(DATA_PATH, "mnist.bson")
 end
 
@@ -35,8 +36,10 @@ start training
 function (args::Trainer)()
     model = getmodel(args.inwidth, args.inheight, args.inchannel, args.nclass,
         args.poolsize, args.filtersize, args.outchannel)
-    loader = getloader(args.batchsize)
-    xtest, ytest = getdata()
+    xtrain, ytrain = getdata(test=false)
+    xtest, ytest = getdata(test=true)
+    loader = Flux.Data.DataLoader((data=xtrain, label=(ytrain .+ 1) |> onehot),
+        batchsize=args.batchsize, shuffle=true)
     optimizer = Adam(args.η, (0.9, 0.99), 1.0e-8)
 
     accbest = 0.0

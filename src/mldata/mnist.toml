@@ -1,0 +1,39 @@
+# Version of the data TOML format.
+# Version of the data TOML format.
+data_config_version=1
+
+[[datasets]]
+# dataset name (can include spaces and underscores)
+name="test"
+# Optional description
+description="MNIST test data"
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="7b79e905-7221-4f26-863b-9f690617c8a5"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="Blob"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/../../data/mnist_test.csv"
+
+[[datasets]]
+# dataset name (can include spaces and underscores)
+name="train"
+# Optional description
+description="MNIST train data"
+# A unique ID. Generate with UUIDs.uuid4()
+uuid="ad334cd3-f3d1-4b04-994a-7ebccf3b1597"
+
+    # Storage location
+    [datasets.storage]
+    # The name of the storage driver.
+    driver="FileSystem"
+    # Data stored in FileSystem is either Blob (a file) or BlobTree (a directory/folder)
+    type="Blob"
+    # Path with posix `/` separators.
+    # Use @__DIR__ for paths relative to Data.toml
+    path="@__DIR__/../../data/mnist_train.csv"
